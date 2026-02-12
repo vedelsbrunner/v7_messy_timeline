@@ -25,6 +25,8 @@
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css?family=Karla:400,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/index.css" />
+    <!-- Local link to badge-lib build (cache-busted for local dev) -->
+    <script type="module" src="vis-badge.js?v=dev1"></script>
 
 </head>
 
@@ -43,6 +45,8 @@
 
         <h3 id="main_title" style="text-align: center; padding-top: 8px;">Back and Forth in Peace Negotiations</h3>
         <button title="Information" id="info_button"><i class="fa fa-info"></i></button>
+        <!-- badges replacement (disabled for now; kept for reference) -->
+        <!-- <div id="top_right_badges" class="top-right-badges"></div> -->
         <button class="button button1"><i class="fa fa-refresh"></i></button>
         <div id="info" style="font-size: 14px;">
             <p>This visualisation shows the trajectory of all formal agreements in peace
@@ -328,51 +332,56 @@
                     .attr("fill-opacity", .5)
                     .attr("opacity", 0)
                     .attr("pointer-events", "none")
-                    .on("mouseover", function (d, i) {
-                        d3.select("#agt_tooltip")
+                    .on("mouseover", function (event, i) {
+                        const tooltipSel = d3.select("#agt_tooltip");
+                        tooltipSel
                             .style("display", "block")
-                            // .style("left", x_position + "px")
-                            // .style("top", y_position + "px")
-                            .html("<strong>" + i.Dat + ":</strong> " + i.Agt)
+                            .html("<strong>" + i.Dat + ":</strong> " + i.Agt);
 
-                        let tool_height = $("#agt_tooltip").height();
-                        console.log(tool_height);
+                        const tooltipNode = tooltipSel.node();
+                        const toolWidth = tooltipNode ? tooltipNode.offsetWidth : 200;
+                        const toolHeight = tooltipNode ? tooltipNode.offsetHeight : 60;
 
-                        let x_position
-                        let y_position
-                        if (d.x > width / 2) {
-                            x_position = d.x - 220
-                        }
-                        else if (d.x < width / 2) {
-                            x_position = d.x + 20
-                        }
+                        let x = event.pageX + 15;
+                        let y = event.pageY + 15;
 
-                        if (d.y > height / 2) {
-                            y_position = d.y - tool_height
-                        }
-                        else if (d.y < height / 2) {
-                            y_position = d.y
-                        }
+                        if (x + toolWidth > window.innerWidth - 10) x = event.pageX - toolWidth - 15;
+                        if (y + toolHeight > window.innerHeight - 10) y = event.pageY - toolHeight - 15;
 
-
-                        d3.select("#agt_tooltip")
-                            .style("left", x_position + "px")
-                            .style("top", y_position + "px")
+                        tooltipSel
+                            .style("left", x + "px")
+                            .style("top", y + "px");
 
                         d3.select(this)
                             .transition()
                             .duration(50)
-                            .attr("r", 8)
+                            .attr("r", 8);
                     })
-                    .on("mouseout", function (d) {
-                        d3.select("#agt_tooltip")
-                            .style("display", "none")
+                    .on("mousemove", function (event) {
+                        const tooltipSel = d3.select("#agt_tooltip");
+                        if (tooltipSel.style("display") !== "block") return;
+
+                        const tooltipNode = tooltipSel.node();
+                        const toolWidth = tooltipNode ? tooltipNode.offsetWidth : 200;
+                        const toolHeight = tooltipNode ? tooltipNode.offsetHeight : 60;
+
+                        let x = event.pageX + 15;
+                        let y = event.pageY + 15;
+
+                        if (x + toolWidth > window.innerWidth - 10) x = event.pageX - toolWidth - 15;
+                        if (y + toolHeight > window.innerHeight - 10) y = event.pageY - toolHeight - 15;
+
+                        tooltipSel
+                            .style("left", x + "px")
+                            .style("top", y + "px");
+                    })
+                    .on("mouseout", function () {
+                        d3.select("#agt_tooltip").style("display", "none");
                         d3.select(this)
                             .transition()
                             .duration(50)
-                            .attr("r", 5)
+                            .attr("r", 5);
                     })
-
 
 
                 let counter_collab = 0;
@@ -387,6 +396,43 @@
                             .style("right", -305 + "px")
                     }
                 })
+
+                // badges replacement (disabled for now; kept for reference)
+                // ;(function renderTopRightBadges() {
+                //     const container = document.getElementById("top_right_badges");
+                //     if (!container) return;
+                //     container.innerHTML = "";
+                //
+                //     const make = (badge) => {
+                //         const el = document.createElement("vis-badge");
+                //         // `type`/`variant` are component props (not fields on `badge`).
+                //         el.setAttribute("type", "mini");
+                //         el.setAttribute("variant", "filled");
+                //         el.badge = badge;
+                //         return el;
+                //     };
+                //
+                //     container.appendChild(make({
+                //         label: "How to Read This",
+                //         description: "This visualisation shows the trajectory of all formal agreements in peace processes from 1990-2024. The blue line represents how a peace process would look if it smoothly went from one stage to the next. However, processes do not tend to follow this linear pattern. Click the visualisation to start and see how processes go back and forth.",
+                //         color: "rgb(2, 136, 209)",
+                //         icon: "Info"
+                //     }));
+                //
+                //     container.appendChild(make({
+                //         label: "Data Up To Date",
+                //         description: "This visualisation illustrates all processes in version 9 of the PA-X Peace Agreements Database, accessible from: www.peaceagreements.org.",
+                //         color: "rgb(46, 125, 50)",
+                //         icon: "Confirmation"
+                //     }));
+                //
+                //     container.appendChild(make({
+                //         label: "Data Creator(s) Attributed",
+                //         description: "This visualisation shows the trajectory of all formal agreements in peace processes from 1990-2024. The blue line represents how a peace process would look if it smoothly went from one stage to the next. However, processes do not tend to follow this linear pattern. Click the visualisation to start and see how processes go back and forth.",
+                //         color: "rgb(2, 136, 209)",
+                //         icon: "badge-check"
+                //     }));
+                // })();
 
                 function clearURL() {
                     const url = new URL(window.location);
@@ -456,6 +502,129 @@
                         .style("font-weight", (d, i) => (i > 1) ? "bold" : "normal")
                         .attr("class", "idline")
                         .on("click", _ => toggleIdeal())
+
+                    // badges under the CLICK TO START label (hide automatically when ideal.container is hidden)
+                    const badgeBoxX = Math.round(scaleX(parseTime("2003-06-01")));
+                    const badgeBoxY = scaleY(3.2) + 74;
+
+                    const fo = ideal.container.append("foreignObject")
+                        .attr("x", badgeBoxX)
+                        .attr("y", badgeBoxY)
+                        .attr("width", 420)
+                        .attr("height", 160)
+                        .attr("class", "idline");
+
+                    const badgeRoot = fo.append("xhtml:div")
+                        .style("display", "flex")
+                        .style("flex-wrap", "wrap")
+                        .style("gap", "8px")
+                        .style("align-items", "center")
+                        .style("max-width", "420px");
+
+                    const openDataBadge = document.createElement("vis-badge");
+                    openDataBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Open Data",
+                        description: "Openly accessible PA-X data produced by the same peace and conflict research group. Click to open the database.",
+                        actionIcon: "ExternalLink",
+                        actionText: "click to open database",
+                        color: "rgb(46, 125, 50)",
+                        icon: "Confirmation"
+                    };
+                    openDataBadge.style.cursor = "pointer";
+                    openDataBadge.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open("https://www.peaceagreements.org", "_blank", "noopener,noreferrer");
+                    });
+
+                    const rawDataBadge = document.createElement("vis-badge");
+                    rawDataBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Raw Data Available",
+                        description: "Download the raw CSV used in this visualisation.",
+                        actionIcon: "Download",
+                        actionText: "click to download CSV",
+                        color: "rgb(46, 125, 50)",
+                        icon: "Confirmation"
+                    };
+                    rawDataBadge.style.cursor = "pointer";
+                    rawDataBadge.addEventListener("click", async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch("data/pax_all_agreements_v9.csv");
+                            if (!res.ok) throw new Error(`Failed to fetch CSV (${res.status})`);
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "pax_all_agreements_v9.csv";
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+
+                    const overlappingElementsBadge = document.createElement("vis-badge");
+                    overlappingElementsBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Overlapping Elements",
+                        description: "Overlaps are intentional and inevitable: many processes are shown on the same timeline to highlight how messy negotiations can be.",
+                        color: "rgb(237, 108, 2)",
+                        icon: "Warning"
+                    };
+
+                    const mindFalseConclusionsBadge = document.createElement("vis-badge");
+                    mindFalseConclusionsBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Mind False Conclusions",
+                        description: "Do not infer “success” from the line shape alone. Use this view to question assumptions, then consult the underlying context and evidence.",
+                        color: "rgb(237, 108, 2)",
+                        icon: "Warning"
+                    };
+
+                    const canSortFilterBadge = document.createElement("vis-badge");
+                    canSortFilterBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Can Sort & Filter",
+                        description: "You can filter by peace process using the dropdown at the top of the page.",
+                        color: "rgb(2, 136, 209)",
+                        icon: "Info"
+                    };
+
+                    const messyTimelineBadge = document.createElement("vis-badge");
+                    messyTimelineBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "How to Read This",
+                        description: "This visualisation shows the trajectory of all formal agreements in peace processes from 1990-2024. The blue line represents how a peace process would look if it smoothly went from one stage to the next. However, processes do not tend to follow this linear pattern. Click the visualisation to start and see how processes go back and forth.",
+                        actionText: "click to start",
+                        actionIcon: "Interactive",
+                        color: "rgb(2, 136, 209)",
+                        icon: "Info"
+                    };
+                    messyTimelineBadge.style.cursor = "pointer";
+                    messyTimelineBadge.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleIdeal();
+                    });
+
+                    badgeRoot.node().appendChild(openDataBadge);
+                    badgeRoot.node().appendChild(rawDataBadge);
+                    badgeRoot.node().appendChild(overlappingElementsBadge);
+                    badgeRoot.node().appendChild(mindFalseConclusionsBadge);
+                    badgeRoot.node().appendChild(canSortFilterBadge);
+                    badgeRoot.node().appendChild(messyTimelineBadge);
 
                     //draw example in explanation
                     ideal.example = d3.select("#ideal-example span").append("svg")
@@ -545,7 +714,7 @@
 
                     let nome = pax.find(d => d.PP == id)
                     let the_nome = nome.PPName
-                    
+
 
                     fixed = id
                     processPath.attr("stroke-opacity", 0.05)
