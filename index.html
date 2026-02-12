@@ -387,9 +387,12 @@
                             .attr("r", 5);
                     })
 
+                // Keep this state even though the legacy info button is disabled.
+
+                let counter_collab = 0;
+
                 /*
                 // Legacy info icon click handler (replaced by `#messy_timeline_badge`; kept for reference)
-                let counter_collab = 0;
                 d3.select("#info_button").on("click", function () {
                     counter_collab += 1;
                     if (counter_collab % 2 !== 0) {
