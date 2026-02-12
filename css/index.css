@@ -146,3 +146,25 @@ img {
     position: absolute;
     height: 42px;
 }
+
+.bottom-right-badges {
+    position: fixed;
+    right: 12px;
+    bottom: 0px;
+    z-index: 1000;
+    display: none;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0px;
+    align-items: center;
+    justify-content: flex-end;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Visually center mini badges against the normal (mono) badge. at the bottom right */
+.bottom-right-badges vis-badge[type="mini"] {
+    transform: translateY(+2px);
+}

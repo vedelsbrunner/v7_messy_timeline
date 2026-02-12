@@ -48,6 +48,7 @@
         <!-- badges replacement (disabled for now; kept for reference) -->
         <!-- <div id="top_right_badges" class="top-right-badges"></div> -->
         <button class="button button1"><i class="fa fa-refresh"></i></button>
+        <div id="bottom_right_badges" class="bottom-right-badges" aria-label="Timeline hints"></div>
         <div id="info" style="font-size: 14px;">
             <p>This visualisation shows the trajectory of all formal agreements in peace
                 processes from 1990-2024.
@@ -80,7 +81,8 @@
         var parseTime = d3.timeParse("%Y-%m-%d");
         var width = document.getElementById('chart').clientWidth
         var margin = 150
-        var height = window.innerHeight - 60
+        var bottomBadgesReservedPx = 14
+        var height = window.innerHeight - 60 - bottomBadgesReservedPx
         var fixed = null
         var ideal = { show: true };
 
@@ -434,6 +436,112 @@
                 //     }));
                 // })();
 
+                const bottomRightBadgesRoot = document.getElementById("bottom_right_badges");
+
+                const OPEN_DATA_URL = "https://www.peaceagreements.org";
+                const OPEN_DATA_BADGE_DATA = {
+                    label: "Open Data",
+                    description: "Openly accessible PA-X data produced by the same peace and conflict research group. Click to open the database.",
+                    actionIcon: "ExternalLink",
+                    actionText: "click to open database",
+                    color: "rgb(46, 125, 50)",
+                    icon: "Confirmation"
+                };
+
+                function wireOpenDataClick(el) {
+                    el.style.cursor = "pointer";
+                    el.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(OPEN_DATA_URL, "_blank", "noopener,noreferrer");
+                    });
+                }
+
+                function setBottomRightBadgesVisible(visible) {
+                    if (!bottomRightBadgesRoot) return;
+                    bottomRightBadgesRoot.style.display = visible ? "flex" : "none";
+                }
+
+                function updateBottomRightBadgesPosition() {
+                    if (!bottomRightBadgesRoot) return;
+                    const svgEl = document.getElementById("svg");
+                    if (!svgEl) return;
+                    const plotRightViewBox = width - margin - 5;
+                    const ctm = svgEl.getScreenCTM && svgEl.getScreenCTM();
+                    if (!ctm || !svgEl.createSVGPoint) return;
+                    const pt = svgEl.createSVGPoint();
+                    pt.x = plotRightViewBox;
+                    pt.y = 0;
+                    const screenPt = pt.matrixTransform(ctm);
+                    const rightOffset = Math.max(0, Math.round(window.innerWidth - screenPt.x));
+                    bottomRightBadgesRoot.style.right = rightOffset + "px";
+                }
+
+                function initBottomRightBadges() {
+                    if (!bottomRightBadgesRoot) return;
+
+                    bottomRightBadgesRoot.innerHTML = "";
+                    setBottomRightBadgesVisible(false);
+
+                    const overlappingElementsBadge = document.createElement("vis-badge");
+                    overlappingElementsBadge.setAttribute("type", "mini");
+                    overlappingElementsBadge.setAttribute("variant", "filled");
+                    overlappingElementsBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Overlapping Elements",
+                        description: "Overlaps are intentional and inevitable: many processes are shown on the same timeline to highlight how messy negotiations can be.",
+                        color: "rgb(237, 108, 2)",
+                        icon: "Warning"
+                    };
+
+                    const mindFalseConclusionsBadge = document.createElement("vis-badge");
+                    mindFalseConclusionsBadge.setAttribute("type", "mini");
+                    mindFalseConclusionsBadge.setAttribute("variant", "filled");
+                    mindFalseConclusionsBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Mind False Conclusions",
+                        description: "Do not infer “success” from the line shape alone. Use this view to question assumptions, then consult the underlying context and evidence.",
+                        color: "rgb(237, 108, 2)",
+                        icon: "Warning"
+                    };
+
+                    const qualitativeCategoriesBadge = document.createElement("vis-badge");
+                    qualitativeCategoriesBadge.setAttribute("type", "mini");
+                    qualitativeCategoriesBadge.setAttribute("variant", "filled");
+                    qualitativeCategoriesBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Qualitative Categories",
+                        description: "The y-axis shows qualitative negotiation stages (categories), not a numeric scale.",
+                        color: "rgb(2, 136, 209)",
+                        icon: "Info"
+                    };
+
+                    const clickToToggleBadge = document.createElement("vis-badge");
+                    clickToToggleBadge.setAttribute("type", "mono");
+                    clickToToggleBadge.setAttribute("variant", "outlined");
+                    clickToToggleBadge.badge = {
+                        label: "Click on Peace Process",
+                        description: "Click a process line to focus on that peace process. Click again or press Escape to return to the full view.",
+                        color: "rgb(2, 136, 209)",
+                        icon: "Interactive"
+                    };
+
+                    bottomRightBadgesRoot.appendChild(overlappingElementsBadge);
+                    bottomRightBadgesRoot.appendChild(mindFalseConclusionsBadge);
+                    bottomRightBadgesRoot.appendChild(qualitativeCategoriesBadge);
+                    bottomRightBadgesRoot.appendChild(clickToToggleBadge);
+
+                    updateBottomRightBadgesPosition();
+                }
+
+                initBottomRightBadges();
+                window.addEventListener("resize", () => {
+                    updateBottomRightBadgesPosition();
+                });
+
                 function clearURL() {
                     const url = new URL(window.location);
                     // Clear all search parameters
@@ -456,6 +564,7 @@
                         .attr("stroke-width", 1)
                         .attr("pointer-events", "none")
                     ideal.show = true;
+                    setBottomRightBadgesVisible(false);
                     fixed = null;
                     $("#selUser").val(0).trigger('change');
 
@@ -522,22 +631,8 @@
                         .style("max-width", "420px");
 
                     const openDataBadge = document.createElement("vis-badge");
-                    openDataBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
-                        label: "Open Data",
-                        description: "Openly accessible PA-X data produced by the same peace and conflict research group. Click to open the database.",
-                        actionIcon: "ExternalLink",
-                        actionText: "click to open database",
-                        color: "rgb(46, 125, 50)",
-                        icon: "Confirmation"
-                    };
-                    openDataBadge.style.cursor = "pointer";
-                    openDataBadge.addEventListener("click", (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        window.open("https://www.peaceagreements.org", "_blank", "noopener,noreferrer");
-                    });
+                    openDataBadge.badge = OPEN_DATA_BADGE_DATA;
+                    wireOpenDataClick(openDataBadge);
 
                     const rawDataBadge = document.createElement("vis-badge");
                     rawDataBadge.badge = {
@@ -646,10 +741,12 @@
                         d3.select("#ideal-example").style("display", "block").style("opacity", 1)
                         processPath.attr("pointer-events", "all").attr("stroke-opacity", 9)
                         ideal.show = false;
+                        setBottomRightBadgesVisible(true);
                     } else {
                         ideal.container.transition().duration(200).style("opacity", 1)
                         processPath.attr("stroke-opacity", .05)
                         ideal.show = true;
+                        setBottomRightBadgesVisible(false);
                     }
 
                 }
