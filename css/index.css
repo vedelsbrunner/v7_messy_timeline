@@ -33,11 +33,11 @@ div.tooltip {
 .button1 {
     position: absolute;
     top: 6px;
-    background-color: #fdd900;
+    background-color: rgb(2, 136, 209);
     /* border: 0.5px solid rgba(0, 0, 0, 0.205); */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     border: none;
-    color: black;
+    color: white;
     padding: 1px 18px;
     text-align: center;
     font-size: 18px;
@@ -48,11 +48,13 @@ div.tooltip {
     right: 3px;
 }
 
+/*
+Legacy info icon button styles (replaced by `#messy_timeline_badge`; kept for reference)
+
 #info_button {
     position: absolute;
     top: 6px;
     background-color: #fdd900;
-    /* border: 0.5px solid rgba(0, 0, 0, 0.205); */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     border: none;
     color: black;
@@ -69,18 +71,37 @@ div.tooltip {
 #info_button:focus{
     outline: 0px;
 }
+*/
+
+#messy_timeline_badge {
+    position: absolute;
+    top: 1px;
+    right: 60px;
+    z-index: 1000;
+    transform: translateY(1px) scale(1.6);
+    transform-origin: top right;
+}
+
+#messy_timeline_badge:focus,
+#messy_timeline_badge:focus-visible {
+    outline: 0px;
+}
 
 .button1:focus{
     outline: 0px;
 }
 
+/*
+Legacy hover styles (replaced by `#how_to_read_badge`; kept for reference)
+
 #info_button:hover {
     background-color: #AA4197;
     color: white;
 }
+*/
 
 .button1:hover {
-    background-color: #AA4197;
+    background-color: rgb(1, 97, 150);
     color: white;
 }
 
@@ -129,14 +150,15 @@ div.tooltip {
     top: -1px;
     margin-left: 5px;
     border: none;
-    background-color: #fdd900;
+    background-color: rgb(2, 136, 209);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     border-radius: 2px;
     font-weight: bold;
+    color: white;
 }
 
 #but_read:hover {
-    background-color: #AA4197;
+    background-color: rgb(1, 97, 150);
     color: white;
 }
 

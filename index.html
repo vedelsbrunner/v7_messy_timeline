@@ -44,7 +44,9 @@
         </div>
 
         <h3 id="main_title" style="text-align: center; padding-top: 8px;">Back and Forth in Peace Negotiations</h3>
-        <button title="Information" id="info_button"><i class="fa fa-info"></i></button>
+        <!-- Legacy info icon (replaced by vis-badge; kept for reference) -->
+        <!-- <button title="Information" id="info_button"><i class="fa fa-info"></i></button> -->
+        <vis-badge id="messy_timeline_badge" type="mini" variant="filled"></vis-badge>
         <!-- badges replacement (disabled for now; kept for reference) -->
         <!-- <div id="top_right_badges" class="top-right-badges"></div> -->
         <button class="button button1"><i class="fa fa-refresh"></i></button>
@@ -385,7 +387,8 @@
                             .attr("r", 5);
                     })
 
-
+                /*
+                // Legacy info icon click handler (replaced by `#messy_timeline_badge`; kept for reference)
                 let counter_collab = 0;
                 d3.select("#info_button").on("click", function () {
                     counter_collab += 1;
@@ -398,6 +401,43 @@
                             .style("right", -305 + "px")
                     }
                 })
+                */
+
+                // Replacement: mini info badge "Messy Timeline"
+                const howToReadBadge = document.getElementById("messy_timeline_badge");
+                const howToReadInfoEl = document.getElementById("info");
+                const howToReadParagraphs = howToReadInfoEl ? Array.from(howToReadInfoEl.querySelectorAll("p")) : [];
+                const howToReadText = howToReadParagraphs
+                    .map((p) => (p && p.innerText ? p.innerText : "").trim())
+                    .filter(Boolean)
+                    .join("\n\n\n");
+                const HOW_TO_READ_URL = "https://www.peaceagreements.org";
+
+                function openHowToReadLink(e) {
+                    if (e && e.preventDefault) e.preventDefault();
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    window.open(HOW_TO_READ_URL, "_blank", "noopener,noreferrer");
+                }
+
+                if (howToReadBadge) {
+                    howToReadBadge.badge = {
+                        type: "mini",
+                        variant: "filled",
+                        label: "Messy Timeline",
+                        description: howToReadText,
+                        actionIcon: "ExternalLink",
+                        actionText: "Click to open www.peaceagreements.org",
+                        color: "rgb(2, 136, 209)",
+                        icon: "Info"
+                    };
+                    howToReadBadge.style.cursor = "pointer";
+                    howToReadBadge.setAttribute("role", "button");
+                    howToReadBadge.setAttribute("tabindex", "0");
+                    howToReadBadge.addEventListener("click", openHowToReadLink);
+                    howToReadBadge.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" || e.key === " ") openHowToReadLink(e);
+                    });
+                }
 
                 // badges replacement (disabled for now; kept for reference)
                 // ;(function renderTopRightBadges() {
@@ -437,6 +477,7 @@
                 // })();
 
                 const bottomRightBadgesRoot = document.getElementById("bottom_right_badges");
+                let clickToToggleBadgeEl = null;
 
                 const OPEN_DATA_URL = "https://www.peaceagreements.org";
                 const OPEN_DATA_BADGE_DATA = {
@@ -460,6 +501,11 @@
                 function setBottomRightBadgesVisible(visible) {
                     if (!bottomRightBadgesRoot) return;
                     bottomRightBadgesRoot.style.display = visible ? "flex" : "none";
+                }
+
+                function setClickToToggleBadgeVisible(visible) {
+                    if (!clickToToggleBadgeEl) return;
+                    clickToToggleBadgeEl.style.display = visible ? "" : "none";
                 }
 
                 function updateBottomRightBadgesPosition() {
@@ -521,13 +567,15 @@
 
                     const clickToToggleBadge = document.createElement("vis-badge");
                     clickToToggleBadge.setAttribute("type", "mono");
-                    clickToToggleBadge.setAttribute("variant", "outlined");
+                    clickToToggleBadge.setAttribute("variant", "filled");
                     clickToToggleBadge.badge = {
                         label: "Click on Peace Process",
                         description: "Click a process line to focus on that peace process. Click again or press Escape to return to the full view.",
                         color: "rgb(2, 136, 209)",
                         icon: "Interactive"
                     };
+                    clickToToggleBadgeEl = clickToToggleBadge;
+                    setClickToToggleBadgeVisible(true);
 
                     bottomRightBadgesRoot.appendChild(overlappingElementsBadge);
                     bottomRightBadgesRoot.appendChild(mindFalseConclusionsBadge);
@@ -565,6 +613,7 @@
                         .attr("pointer-events", "none")
                     ideal.show = true;
                     setBottomRightBadgesVisible(false);
+                    setClickToToggleBadgeVisible(true);
                     fixed = null;
                     $("#selUser").val(0).trigger('change');
 
@@ -814,6 +863,7 @@
 
 
                     fixed = id
+                    setClickToToggleBadgeVisible(false);
                     processPath.attr("stroke-opacity", 0.05)
                     d3.selectAll("g.PP-" + id + " path").attr("stroke-opacity", 1).attr("stroke-width", 3)
                     d3.selectAll("circle.PP-" + id).attr("opacity", .7).attr("pointer-events", "all")
@@ -838,6 +888,7 @@
                 var exitProcess = function () {
                     clearURL()
                     fixed = null;
+                    setClickToToggleBadgeVisible(true);
                     $("#selUser").val(0).trigger('change');
 
                     /*svg.call(zoom).transition().duration(1500)
