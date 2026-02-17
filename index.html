@@ -25,10 +25,57 @@
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css?family=Karla:400,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/index.css" />
-    <script
-        type="module"
-        src="https://cdn.jsdelivr.net/gh/vedelsbrunner/badge-lib@main/dist-wc/vis-badge.js"
-    ></script>
+    <script>
+        (function registerVisBadge() {
+            const baseUrl = "https://vedelsbrunner.github.io/badge-lib/dist-wc";
+            const pinnedFile = "";
+            const alwaysLive = true;
+            const isLocal =
+                window.location.protocol === "file:" ||
+                window.location.hostname === "localhost" ||
+                window.location.hostname === "127.0.0.1";
+
+            const localUrl = "./vis-badge.js";
+            const pinnedUrl = pinnedFile ? `${baseUrl}/${pinnedFile}` : "";
+            const latestUrl = `${baseUrl}/vis-badge.js`;
+
+            function addCacheBust(url) {
+                const sep = url.includes("?") ? "&" : "?";
+                return `${url}${sep}v=${Date.now()}`;
+            }
+
+            const urlsToTry = [];
+            if (isLocal) {
+                urlsToTry.push(addCacheBust(localUrl));
+                if (pinnedUrl) urlsToTry.push(addCacheBust(pinnedUrl));
+                urlsToTry.push(addCacheBust(latestUrl));
+                urlsToTry.push(localUrl);
+            } else {
+                if (pinnedUrl) urlsToTry.push(pinnedUrl);
+                urlsToTry.push(alwaysLive ? addCacheBust(latestUrl) : latestUrl);
+                urlsToTry.push(localUrl);
+            }
+
+            (async () => {
+                let lastError;
+                for (const url of urlsToTry) {
+                    try {
+                        await import(url);
+                        return;
+                    } catch (err) {
+                        lastError = err;
+                        console.warn(`[vis-badge] Failed to import ${url}`, err);
+                    }
+                }
+
+                console.error(
+                    `[vis-badge] Could not load vis-badge web component bundle.\n` +
+                        `Tried:\n- ${urlsToTry.join("\n- ")}\n`,
+                    lastError
+                );
+            })();
+        })();
+    </script>
 
 </head>
 
@@ -43,12 +90,13 @@
                 <option value="0">Peace Process</option>
             </select>
             <input type='button' value='Go' id='but_read'>
+            <vis-badge id="sort_filter_badge" type="mini" variant="filled" corners="rectangular"></vis-badge>
         </div>
 
         <h3 id="main_title" style="text-align: center; padding-top: 8px;">Back and Forth in Peace Negotiations</h3>
         <!-- Legacy info icon (replaced by vis-badge; kept for reference) -->
         <!-- <button title="Information" id="info_button"><i class="fa fa-info"></i></button> -->
-        <vis-badge id="messy_timeline_badge" type="mini" variant="filled"></vis-badge>
+        <vis-badge id="messy_timeline_badge" type="mini" variant="filled" corners="rectangular"></vis-badge>
         <!-- badges replacement (disabled for now; kept for reference) -->
         <!-- <div id="top_right_badges" class="top-right-badges"></div> -->
         <button class="button button1"><i class="fa fa-refresh"></i></button>
@@ -410,12 +458,10 @@
 
                 // Replacement: mini info badge "Messy Timeline"
                 const howToReadBadge = document.getElementById("messy_timeline_badge");
-                const howToReadInfoEl = document.getElementById("info");
-                const howToReadParagraphs = howToReadInfoEl ? Array.from(howToReadInfoEl.querySelectorAll("p")) : [];
-                const howToReadText = howToReadParagraphs
-                    .map((p) => (p && p.innerText ? p.innerText : "").trim())
-                    .filter(Boolean)
-                    .join("\n\n\n");
+                const howToReadText =
+                    "This visualisation shows the trajectory of all formal agreements in peace processes from 1990-2024. The blue line represents how a peace process would look if it smoothly went from one stage to the next. However, processes do not tend to follow this linear pattern. Click the visualisation to start and see how processes go back and forth.\n\n" +
+                    "This visualisation illustrates all processes in version 9 of the PA-X Peace Agreements Database, accessible from: www.peaceagreements.org.\n\n" +
+                    "Credits: Tobias Kauer for original visualisation design & Tomas Vancisin for v2 updates at PeaceRep (University of Edinburgh).";
                 const HOW_TO_READ_URL = "https://www.peaceagreements.org";
 
                 function openHowToReadLink(e) {
@@ -426,12 +472,10 @@
 
                 if (howToReadBadge) {
                     howToReadBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
                         label: "Messy Timeline",
                         description: howToReadText,
                         actionIcon: "ExternalLink",
-                        actionText: "Click to open www.peaceagreements.org",
+                        actionText: "Click for More",
                         color: "rgb(2, 136, 209)",
                         icon: "Info"
                     };
@@ -443,7 +487,6 @@
                         if (e.key === "Enter" || e.key === " ") openHowToReadLink(e);
                     });
                 }
-
                 // badges replacement (disabled for now; kept for reference)
                 // ;(function renderTopRightBadges() {
                 //     const container = document.getElementById("top_right_badges");
@@ -538,8 +581,6 @@
                     overlappingElementsBadge.setAttribute("type", "mini");
                     overlappingElementsBadge.setAttribute("variant", "filled");
                     overlappingElementsBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
                         label: "Overlapping Elements",
                         description: "Overlaps are intentional and inevitable: many processes are shown on the same timeline to highlight how messy negotiations can be.",
                         color: "rgb(237, 108, 2)",
@@ -550,8 +591,6 @@
                     mindFalseConclusionsBadge.setAttribute("type", "mini");
                     mindFalseConclusionsBadge.setAttribute("variant", "filled");
                     mindFalseConclusionsBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
                         label: "Mind False Conclusions",
                         description: "Do not infer “success” from the line shape alone. Use this view to question assumptions, then consult the underlying context and evidence.",
                         color: "rgb(237, 108, 2)",
@@ -562,8 +601,6 @@
                     qualitativeCategoriesBadge.setAttribute("type", "mini");
                     qualitativeCategoriesBadge.setAttribute("variant", "filled");
                     qualitativeCategoriesBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
                         label: "Qualitative Categories",
                         description: "The y-axis shows qualitative negotiation stages (categories), not a numeric scale.",
                         color: "rgb(2, 136, 209)",
@@ -673,16 +710,16 @@
                     const fo = ideal.container.append("foreignObject")
                         .attr("x", badgeBoxX)
                         .attr("y", badgeBoxY)
-                        .attr("width", 420)
-                        .attr("height", 160)
+                        .attr("width", 520)
+                        .attr("height", 72)
                         .attr("class", "idline");
 
                     const badgeRoot = fo.append("xhtml:div")
                         .style("display", "flex")
-                        .style("flex-wrap", "wrap")
+                        .style("flex-wrap", "nowrap")
                         .style("gap", "8px")
                         .style("align-items", "center")
-                        .style("max-width", "420px");
+                        .style("max-width", "520px");
 
                     const openDataBadge = document.createElement("vis-badge");
                     openDataBadge.badge = OPEN_DATA_BADGE_DATA;
@@ -690,8 +727,6 @@
 
                     const rawDataBadge = document.createElement("vis-badge");
                     rawDataBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
                         label: "Raw Data Available",
                         description: "Download the raw CSV used in this visualisation.",
                         actionIcon: "Download",
@@ -720,40 +755,8 @@
                         }
                     });
 
-                    const overlappingElementsBadge = document.createElement("vis-badge");
-                    overlappingElementsBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
-                        label: "Overlapping Elements",
-                        description: "Overlaps are intentional and inevitable: many processes are shown on the same timeline to highlight how messy negotiations can be.",
-                        color: "rgb(237, 108, 2)",
-                        icon: "Warning"
-                    };
-
-                    const mindFalseConclusionsBadge = document.createElement("vis-badge");
-                    mindFalseConclusionsBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
-                        label: "Mind False Conclusions",
-                        description: "Do not infer “success” from the line shape alone. Use this view to question assumptions, then consult the underlying context and evidence.",
-                        color: "rgb(237, 108, 2)",
-                        icon: "Warning"
-                    };
-
-                    const canSortFilterBadge = document.createElement("vis-badge");
-                    canSortFilterBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
-                        label: "Can Sort & Filter",
-                        description: "You can filter by peace process using the dropdown at the top of the page.",
-                        color: "rgb(2, 136, 209)",
-                        icon: "Info"
-                    };
-
                     const messyTimelineBadge = document.createElement("vis-badge");
                     messyTimelineBadge.badge = {
-                        type: "mini",
-                        variant: "filled",
                         label: "How to Read This",
                         description: "This visualisation shows the trajectory of all formal agreements in peace processes from 1990-2024. The blue line represents how a peace process would look if it smoothly went from one stage to the next. However, processes do not tend to follow this linear pattern. Click the visualisation to start and see how processes go back and forth.",
                         actionText: "click to start",
@@ -770,9 +773,6 @@
 
                     badgeRoot.node().appendChild(openDataBadge);
                     badgeRoot.node().appendChild(rawDataBadge);
-                    badgeRoot.node().appendChild(overlappingElementsBadge);
-                    badgeRoot.node().appendChild(mindFalseConclusionsBadge);
-                    badgeRoot.node().appendChild(canSortFilterBadge);
                     badgeRoot.node().appendChild(messyTimelineBadge);
 
                     //draw example in explanation
