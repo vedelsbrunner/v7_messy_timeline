@@ -90,7 +90,13 @@
                 <option value="0">Peace Process</option>
             </select>
             <input type='button' value='Go' id='but_read'>
-            <vis-badge id="sort_filter_badge" type="mini" variant="filled" corners="rectangular"></vis-badge>
+            <div id="sort_filter_badge_row"
+                style="margin-top: 1px; clear: both; display: flex; flex-direction: row; align-items: center; gap: 2px; flex-wrap: nowrap;">
+                <vis-badge id="raw_data_badge" style="display: block; margin: 0;" type="mini"
+                    variant="filled"></vis-badge>
+                <vis-badge id="sort_filter_badge" style="display: block; margin: 0;" type="mini"
+                    variant="filled"></vis-badge>
+            </div>
         </div>
 
         <h3 id="main_title" style="text-align: center; padding-top: 8px;">Back and Forth in Peace Negotiations</h3>
@@ -487,6 +493,32 @@
                         if (e.key === "Enter" || e.key === " ") openHowToReadLink(e);
                     });
                 }
+
+                const sortFilterBadge = document.getElementById("sort_filter_badge");
+                if (sortFilterBadge) {
+                    sortFilterBadge.badge = {
+                        label: "Can Sort & Filter",
+                        description: "You can filter by peace process using the dropdown at the top left, then click Go.",
+                        color: "rgb(2, 136, 209)",
+                        icon: "Info",
+                        category: "dispatch",
+                        type: "dispatch"
+                    };
+                }
+
+                const rawDataTopBadge = document.getElementById("raw_data_badge");
+                if (rawDataTopBadge) {
+                    rawDataTopBadge.badge = {
+                        label: "Raw Data Available",
+                        description: "Download the raw CSV used in this visualisation.",
+                        actionIcon: "Download",
+                        actionText: "click to download CSV",
+                        color: "rgb(46, 125, 50)",
+                        icon: "Confirmation"
+                    };
+                    wireRawDataDownloadClick(rawDataTopBadge);
+                }
+
                 // badges replacement (disabled for now; kept for reference)
                 // ;(function renderTopRightBadges() {
                 //     const container = document.getElementById("top_right_badges");
@@ -528,6 +560,8 @@
                 let clickToToggleBadgeEl = null;
 
                 const OPEN_DATA_URL = "https://www.peaceagreements.org";
+                const RAW_DATA_CSV_PATH = "data/pax_all_agreements_v9.csv";
+                const MIND_FALSE_CONCLUSIONS_URL = "https://www.peaceagreements.org/visualizations/data-overview-visualization/";
                 const OPEN_DATA_BADGE_DATA = {
                     label: "Open Data",
                     description: "Openly accessible PA-X data produced by the same peace and conflict research group. Click to open the database.",
@@ -543,6 +577,38 @@
                         e.preventDefault();
                         e.stopPropagation();
                         window.open(OPEN_DATA_URL, "_blank", "noopener,noreferrer");
+                    });
+                }
+
+                function wireRawDataDownloadClick(el) {
+                    el.style.cursor = "pointer";
+                    el.addEventListener("click", async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch(RAW_DATA_CSV_PATH);
+                            if (!res.ok) throw new Error(`Failed to fetch CSV (${res.status})`);
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "pax_all_agreements_v9.csv";
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+                }
+
+                function wireMindFalseConclusionsClick(el) {
+                    el.style.cursor = "pointer";
+                    el.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(MIND_FALSE_CONCLUSIONS_URL, "_blank", "noopener,noreferrer");
                     });
                 }
 
@@ -725,36 +791,6 @@
                     openDataBadge.badge = OPEN_DATA_BADGE_DATA;
                     wireOpenDataClick(openDataBadge);
 
-                    const rawDataBadge = document.createElement("vis-badge");
-                    rawDataBadge.badge = {
-                        label: "Raw Data Available",
-                        description: "Download the raw CSV used in this visualisation.",
-                        actionIcon: "Download",
-                        actionText: "click to download CSV",
-                        color: "rgb(46, 125, 50)",
-                        icon: "Confirmation"
-                    };
-                    rawDataBadge.style.cursor = "pointer";
-                    rawDataBadge.addEventListener("click", async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        try {
-                            const res = await fetch("data/pax_all_agreements_v9.csv");
-                            if (!res.ok) throw new Error(`Failed to fetch CSV (${res.status})`);
-                            const blob = await res.blob();
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "pax_all_agreements_v9.csv";
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    });
-
                     const messyTimelineBadge = document.createElement("vis-badge");
                     messyTimelineBadge.badge = {
                         label: "How to Read This",
@@ -771,9 +807,20 @@
                         toggleIdeal();
                     });
 
+                    const mindFalseConclusionsBadge = document.createElement("vis-badge");
+                    mindFalseConclusionsBadge.badge = {
+                        label: "Mind False Conclusions",
+                        description: "Do not infer “success” from the line shape alone. Use this view to question assumptions, then consult the underlying context and evidence.",
+                        actionText: "click for more",
+                        actionIcon: "ExternalLink",
+                        color: "rgb(237, 108, 2)",
+                        icon: "Warning"
+                    };
+                    wireMindFalseConclusionsClick(mindFalseConclusionsBadge);
+
                     badgeRoot.node().appendChild(openDataBadge);
-                    badgeRoot.node().appendChild(rawDataBadge);
                     badgeRoot.node().appendChild(messyTimelineBadge);
+                    badgeRoot.node().appendChild(mindFalseConclusionsBadge);
 
                     //draw example in explanation
                     ideal.example = d3.select("#ideal-example span").append("svg")

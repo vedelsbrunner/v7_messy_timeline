@@ -87,6 +87,20 @@ Legacy info icon button styles (replaced by `#messy_timeline_badge`; kept for re
     outline: 0px;
 }
 
+#sort_filter_badge {
+    display: block;
+    margin: 0;
+}
+
+#sort_filter_badge_row {
+    margin-top: 8px;
+}
+
+#sort_filter_badge:focus,
+#sort_filter_badge:focus-visible {
+    outline: 0px;
+}
+
 .button1:focus{
     outline: 0px;
 }
